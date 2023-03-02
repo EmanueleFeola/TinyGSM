@@ -665,6 +665,9 @@ protected:
 			if (waitResponse(timeout_ms, GF(GSM_NL "+CIPOPEN:")) != 1) {
 				return false;
 			}
+			else {
+				return true;
+			}
 		}
 		else {
 			if (waitResponse(timeout_ms, GF(GSM_NL "+CCHOPEN: 0,0")) != 1) {
@@ -696,19 +699,21 @@ protected:
 			if (waitResponse(GF(GSM_NL "+CIPSEND:")) != 1) {
 				return 0;
 			}
+
+			streamSkipUntil(',');  // Skip mux
+			streamSkipUntil(',');  // Skip requested bytes to send
+			// TODO(?):  make sure requested and confirmed bytes match
+			return streamGetIntBefore('\n');
 		}
 		else {
 			DBG("modemSend waitResponse CCHSEND called ");
-			if (waitResponse(GF(GSM_NL "+CCHSEND:")) != 1)
+			if (waitResponse() != 1)
 			{
 				return 0;
 			}
+			
+			return len;
 		}
-
-		streamSkipUntil(',');  // Skip mux
-		streamSkipUntil(',');  // Skip requested bytes to send
-		// TODO(?):  make sure requested and confirmed bytes match
-		return streamGetIntBefore('\n');
 	}
 
 	size_t modemRead(size_t size, uint8_t mux) {
@@ -773,7 +778,7 @@ protected:
 				TINY_GSM_YIELD();
 			}
 			char c = stream.read();
-			SerialMon.print(c);
+			//SerialMon.print(c);
 #endif
 			sockets[mux]->rx.put(c);
 		}
