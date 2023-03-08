@@ -363,6 +363,9 @@ protected:
 		// URC to show it's really connected.
 		sendAT(GF("+NETOPEN"));
 		if (waitResponse(75000L, GF(GSM_NL "+NETOPEN: 0")) != 1) { return false; }
+		
+		//sendAT(GF("+CTCPKA=1,2,5,1"));
+		//waitResponse();
 
 		return true;
 	}
@@ -707,7 +710,8 @@ protected:
 		}
 		else {
 			DBG("modemSend waitResponse CCHSEND called ");
-			if (waitResponse() != 1)
+			auto index = waitResponse(GF("+CCHSEND:"), GF("OK"));
+			if (index != 1 && index != 2)
 			{
 				return 0;
 			}
@@ -745,11 +749,11 @@ protected:
 		else {
 			sendAT(GF("+CCHRECV="), mux, ',', (uint16_t)size);
 			DBG("modemRead  CCHRECV called ");
-			if (waitResponse(GF("+CCHRECV:")) != 1) {
+			if (waitResponse(GF("+CCHRECV: DATA,")) != 1) {
 				return 0;
 			}
 			// DATA,0,4
-			streamSkipUntil(',');  //DATA,
+			//streamSkipUntil(',');  //DATA,
 			streamSkipUntil(',');  // Skip mux/cid (0,)
 			len_requested = streamGetIntBefore('\n');
 			// DBG("###len_requested", len_requested);
@@ -812,11 +816,11 @@ protected:
 			// AT+CCHRECV? +CCHRECV: LEN,<cache_len_0>,<cache_len_1>
 			sendAT(GF("+CCHRECV?"));
 			DBG("modemGetAvailable  +CCHRECV? called ");
-			if (waitResponse(GF("+CCHRECV:")) == 1) {
-				streamSkipUntil(',');  // Skip mode 4
+			if (waitResponse(GF("+CCHRECV: LEN,")) == 1) {
+				//streamSkipUntil(',');  // Skip mode 4
 				result = streamGetIntBefore(',');
 				DBG("modemGetAvailable  +CCHRECV?2 called ");
-				waitResponse();
+				//waitResponse();
 			}
 		}
 		DBG("### Available:", result, "on", mux);
@@ -1019,3 +1023,4 @@ protected:
 };
 
 #endif  // SRC_TINYGSMCLIENTSIM7600_H_
+
